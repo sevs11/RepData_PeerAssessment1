@@ -1,25 +1,55 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research - assessment 1"
+author: "V. Demydov"
+date: "Saturday, February 14, 2015"
+output: html_document
 ---
 
+## 1. Mean steps number
 
-## Loading and preprocessing the data
+```{r}
+setwd("D:/stud/courcera/rep_r")
+acTable<-read.csv('activity.csv')
+stepsByDays<-tapply(acTable$steps,acTable$date,sum)
+hist(stepsByDays)
+ss<-summary(stepsByDays)
+ss[4]
+ss[3]
+```
+## 2. 5-min intervals
+```{r}
+stepsByInterval<-aggregate(steps~interval,data=acTable,mean)
+plot(stepsByInterval$interval,stepsByInterval$steps,type='l')
+maxInt<-stepsByInterval$interval[which.max(stepsByInterval$steps)]
+```
+Interval containing maximum number of steps is `r maxInt`
 
+## 3. Imputing missing values
+```{r}
+naCalc<-length(acTable$steps[acTable$steps=='NA'])
+```
+Total number of missing values in the dataset is `r naCalc`
+```{r}
+meanByDays<-aggregate(steps~date,data=acTable,mean)
+meanSteps<-mean(acTable$steps,na.rm=T)
+fillTable<-acTable
+fillTable$steps[is.na(fillTable$steps)]<-meanSteps
+stepsByDays<-tapply(fillTable$steps,fillTable$date,sum)
+hist(stepsByDays)
+ss<-summary(stepsByDays)
+ss[4]
+ss[3]
+```
+I am sorry, I understood that my filling tactics is not very good (but I could select any). I tried to fill from aggregated table but could not find command like vlookup in Excel. All my construction caused error.
 
+##4. Are there differences in activity patterns between weekdays and weekends?
+```{r}
+fillTable$nc<-weekdays(as.Date(fillTable$date)) %in% c("субота", "неділя")
+stepsByIntervalWork<-aggregate(steps~interval,data=fillTable[fillTable$nc==FALSE,],mean)
+stepsByIntervalWeekend<-aggregate(steps~interval,data=fillTable[fillTable$nc==TRUE,],mean)
+par(mfrow=c(2,1))
+par(mar=c(4,4,2,1))
+plot(stepsByIntervalWeekend$interval,stepsByIntervalWeekend$steps,type='l',xlab='',ylab='Number of steps',main='weekend')
+plot(stepsByIntervalWork$interval,stepsByIntervalWork$steps,type='l',xlab='interval',ylab='Number of steps',main='weekday')
 
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+```
